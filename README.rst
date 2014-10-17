@@ -71,7 +71,7 @@ after a few moments of running you'll end up with a directory tree looking like:
     ENCFF000EBK.fastq  ENCFF000EBY.gtf    ENCFF000ECP.bam     ENCFF000EDL.bigWig
     ENCFF000EBL.fastq  ENCFF000ECB.gtf    ENCFF000ECQ.gtf     ENCFF000EDM.bigWig
 
-If you look carefully you'll notice all of the files are broken symlinks.
+It looks like it downloaded data, but actually those are all broken symlinks.
 
 What has happened is git annex has recorded the a placeholder file which is
 actually stored at a remote url. You can download files with comands like
