@@ -77,6 +77,10 @@ What has happened is git annex has recorded the a placeholder file which is
 actually stored at a remote url. You can download files with comands like
 ``git annex get ENCFF00ECB.gtf`` or ``git annex get *.fastq``
 
+And when you start running out of disk space, you can use
+``git annex drop ENCFF00ECB.gtf`` to remove the local copy. However
+it remembers the url and you can re-download it again in the future.
+
 What will hopefully make this much more useful is git-annex's `metadata view`_.
 
 First lets see what metadata has been attached by encode-annex::
