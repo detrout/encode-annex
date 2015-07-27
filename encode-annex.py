@@ -27,12 +27,15 @@ def main(cmdline=None):
     if not verify_annex(args.destination, create=args.init):
         return 1
 
+    files_tracked = 0
     for object_id in args.experiments:
         obj = get_experiment(object_id)
         with chdirContext(args.destination):
-            annex_encode_files(obj)
+            files_tracked += annex_encode_files(obj)
 
-    git_commit(args.destination, args.experiments)
+    if files_tracked > 0:
+        git_commit(args.destination, args.experiments)
+
     return 0
 
 def make_parser():
@@ -97,6 +100,7 @@ def get_experiment(experiment):
 def annex_encode_files(experiment):
     """annex files from the experiment attaching some useful metadata.
     """
+    files_tracked = 0
     useful = {
         'experiment': set(['assay_term_name', 'assay_term_id',
                           'biosample_term_name', 'biosample_term_id', 'biosample_type',
@@ -115,11 +119,14 @@ def annex_encode_files(experiment):
         name = file_object['accession'] + '.' + file_object['file_format']
         if not (os.path.islink(name) or os.path.exists(name)):
             annex_addurl(name, url)
+            files_tracked += 1
 
         metadata = experiment_metadata.copy()
         metadata.extend(generate_metadata(file_object, useful))
 
         annex_metadata(name, metadata)
+
+    return files_tracked
 
 
 def generate_metadata(encode_object, useful):
