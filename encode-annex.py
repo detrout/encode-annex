@@ -158,6 +158,9 @@ def generate_metadata(encode_object, useful):
                 target = encode_object['target'].get('label')
                 if target:
                     metadata.extend(['-s', 'target={}'.format(target)])
+            elif key == 'dataset':
+                _, dataset = os.path.split(value[:-1])
+                metadata.extend(['-s', 'dataset={}'.format(dataset)])
             elif key == 'replicate':
                 metadata.extend(generate_metadata(encode_object['replicate'], useful))
             elif key == 'library':
