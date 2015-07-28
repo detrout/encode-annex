@@ -123,7 +123,8 @@ def annex_encode_files(experiment, host, auth):
                       'uuid', 'replicate'
                       ]),
         'replicate': set(['biological_replicate_number', 'technical_replicate_number', 
-                          'paired_ended'])
+                          'paired_ended', 'library']),
+        'library': set(['aliases', 'description'])
     }
     experiment_metadata = generate_metadata(experiment, useful)
     for file_object in experiment['files']:
@@ -152,16 +153,18 @@ def generate_metadata(encode_object, useful):
     for key in encode_object:
         if key in useful[object_type]:
             value = encode_object[key]
-            if isinstance(value, list):
-                for subvalue in value:
-                    metadata.extend(['-s', '{}+={}'.format(key, subvalue)])
             # using 'label' as the target name would be silly, so we special case it
-            elif key == 'target':
+            if key == 'target':
                 target = encode_object['target'].get('label')
                 if target:
                     metadata.extend(['-s', 'target={}'.format(target)])
             elif key == 'replicate':
                 metadata.extend(generate_metadata(encode_object['replicate'], useful))
+            elif key == 'library':
+                metadata.extend(generate_metadata(encode_object['library'], useful))
+            elif isinstance(value, list):
+                for subvalue in value:
+                    metadata.extend(['-s', '{}+={}'.format(key, subvalue)])
             else:
                 metadata.extend(['-s','{}={}'.format(key, value)])
     return metadata
