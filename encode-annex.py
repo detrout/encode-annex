@@ -10,6 +10,7 @@ import requests
 
 logger = logging.getLogger('encode-annex')
 
+
 def main(cmdline=None):
     parser = make_parser()
 
@@ -38,9 +39,12 @@ def main(cmdline=None):
 
     return 0
 
+
 def make_parser():
-    parser = argparse.ArgumentParser('%prog: initialize a git-annex repository with an ENCODE Project experiment')
-    parser.add_argument('experiments', nargs='*', help='experiment IDs to download')
+    parser = argparse.ArgumentParser(
+        '%prog: initialize a git-annex repository with an ENCODE Project experiment')
+    parser.add_argument('experiments', nargs='*',
+                        help='experiment IDs to download')
     parser.add_argument('-i', '--init', default=False, action='store_true',
                         help='initialize directory if needed')
     parser.add_argument('-d', '--destination', default=os.getcwd(),
@@ -181,7 +185,7 @@ def git_commit(target, experiments):
     """
     with chdirContext(target):
         run_command(
-            ['git', 'commit', 
+            ['git', 'commit',
              '-m', 'Annexed encode objects: ' + ','.join(experiments)])
 
 
@@ -200,13 +204,14 @@ def annex_addurl(name, url):
 
 def annex_metadata(name, metadata):
     """Attach meta-data to a file.
-    
+
     requires a metadata list already in a git-annex friendly format.
     e.g. -s name=value name+=value etc.
     """
     cmd = ['git-annex', 'metadata', name]
     cmd.extend(metadata)
     run_command(cmd)
+
 
 def run_command(cmd):
     logger.debug(cmd)
