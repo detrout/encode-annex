@@ -146,6 +146,23 @@ produces a directory tree like this::
     3/ENCFF000EBR.fastq
     3/ENCFF000EBJ.fastq
 
+Authenticated Requests
+======================
+
+If you're an ENCODE member you might want to download data that hasn't been
+released yet, and that unfortunately requires an authentication token to be
+sent along with all your requests.
+
+A recent update to encode-annex will allow encode-annex to use the .netrc
+file for its own requests. However you will also need to adjust a git-annex
+setting so the download utililty git-annex calls knows to also use the
+the .netrc file.::
+
+  git config annex.web-download-command = web-download-command = curl -L -n -o %file %url
+
+That forces git-annex to use curl, to follow redirects and to use the .netrc file.
+  
+
 .. _git-annex: http://git-annex.branchable.com/
 .. _ENCSR000CWQ: https://www.encodeproject.org/experiments/ENCSR000CWQ/
 .. _metadata view: http://git-annex.branchable.com/tips/metadata_driven_views/
