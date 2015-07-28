@@ -147,8 +147,8 @@ def generate_metadata(encode_object, useful):
     """Generate metadata options from an encode object and interesting keys.
     """
     metadata = []
-    print(encode_object['@type'])
-    types = [ x for x in encode_object['@type'] if x in useful ]
+
+    types = [x for x in encode_object['@type'] if x in useful]
     object_type = types[0]
     for key in encode_object:
         if key in useful[object_type]:
