@@ -169,7 +169,7 @@ def generate_metadata(encode_object, useful):
                 for subvalue in value:
                     metadata.extend(['-s', '{}+={}'.format(key, subvalue)])
             else:
-                metadata.extend(['-s','{}={}'.format(key, value)])
+                metadata.extend(['-s', '{}={}'.format(key, value)])
     return metadata
 
 
@@ -202,10 +202,20 @@ def annex_init(target):
         run_command(['git-annex', 'init'])
 
 
-def annex_addurl(name, url):
+def annex_addurl(name, url, fast=False):
     """Annex url
     """
-    run_command(['git-annex', 'addurl', '--fast', '--file', name, url])
+    command = ['git-annex', 'addurl']
+    if logger.level >= logging.DEBUG:
+        command.append('--debug')
+    elif logger.level >= logging.INFO:
+        command.append('--verbose')
+
+    if fast:
+        command.append('--fast')
+
+    command.extend(['--file', name, url])
+    run_command(command)
 
 
 def annex_metadata(name, metadata):
