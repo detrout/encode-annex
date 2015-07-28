@@ -2,6 +2,7 @@
 
 import argparse
 import logging
+import netrc
 import os
 import subprocess
 import sys
@@ -24,11 +25,13 @@ def main(cmdline=None):
     if not verify_annex(args.destination, create=args.init):
         return 1
 
+    auth = get_netrc(args.host)
+
     files_tracked = 0
     for object_id in args.experiments:
-        obj = get_experiment(object_id)
+        obj = get_experiment(object_id, args.host, auth)
         with chdirContext(args.destination):
-            files_tracked += annex_encode_files(obj)
+            files_tracked += annex_encode_files(obj, args.host, auth)
 
     if files_tracked > 0:
         git_commit(args.destination, args.experiments)
@@ -40,7 +43,12 @@ def make_parser():
     parser.add_argument('experiments', nargs='*', help='experiment IDs to download')
     parser.add_argument('-i', '--init', default=False, action='store_true',
                         help='initialize directory if needed')
-    parser.add_argument('-d', '--destination', help='directory do download things into', default=os.getcwd())
+    parser.add_argument('-d', '--destination', default=os.getcwd(),
+                        help='directory do download things into',)
+    parser.add_argument('--fast', action='store_true', default=False,
+                        help="Don't automatically download files")
+    parser.add_argument('--host', default='www.encodeproject.org',
+                        help='what DCC host to to connect to')
     parser.add_argument('-v', '--verbose', default=False, action='store_true',
                         help='Increase logging (Report info messages)')
     parser.add_argument('-vv', '--debug', default=False, action='store_true',
@@ -71,22 +79,25 @@ def verify_annex(target, create=False):
         if create:
             annex_init(target)
         else:
-            logger.error('%s is not a git-annex directory please cd %s; git annex init', target, target)
+            logger.error(
+                '%s is not a git-annex directory please cd %s; git annex init',
+                target,
+                target)
             return False
 
     return True
 
 
-def get_experiment(experiment):
+def get_experiment(experiment, host, auth=None):
     """Request an ENCODE object from a url
     """
-    base = 'https://www.encodeproject.org/experiments/{}'
-    url = base.format(experiment)
-    response = requests.get(url, params={'format': 'json'})
+    base = 'https://{host}/experiments/{experiment}'
+    url = base.format(host=host, experiment=experiment)
+    response = requests.get(url, auth=auth, params={'format': 'json'})
     if response.status_code != 200:
-        raise requests.HTTPError("Unable to open {} result {}".format(url, response.status_code))
+        raise requests.HTTPError(
+            "Unable to open {} result {}".format(url, response.status_code))
 
-    print(response.headers.keys())
     obj = response.json()
     if u'experiment' not in obj.get('@type', []):
         raise ValueError("Returned object not an experiment")
@@ -94,7 +105,7 @@ def get_experiment(experiment):
     return obj
 
 
-def annex_encode_files(experiment):
+def annex_encode_files(experiment, host, auth):
     """annex files from the experiment attaching some useful metadata.
     """
     files_tracked = 0
@@ -112,8 +123,9 @@ def annex_encode_files(experiment):
     }
     experiment_metadata = generate_metadata(experiment, useful)
     for file_object in experiment['files']:
-        url = 'https://www.encodeproject.org' + file_object['href']
-        name = file_object['accession'] + '.' + file_object['file_format']
+        url = 'https://' + host + file_object['href']
+        _, name = os.path.split(file_object['href'])
+        #name = file_object['accession'] + '.' + file_object['file_format']
         if not (os.path.islink(name) or os.path.exists(name)):
             annex_addurl(name, url)
             files_tracked += 1
@@ -149,6 +161,13 @@ def generate_metadata(encode_object, useful):
             else:
                 metadata.extend(['-s','{}={}'.format(key, value)])
     return metadata
+
+
+def get_netrc(host):
+    session = netrc.netrc()
+    authenticators = session.authenticators(host)
+    if authenticators:
+        return (authenticators[0], authenticators[2])
 
 
 def git_init(target):
