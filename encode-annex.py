@@ -120,7 +120,7 @@ def annex_encode_files(experiment, host, auth):
                           ]),
         'file': set(['aliases', 'accession' ,'dataset', 'date_created',
                       'file_format', 'output_type', 'submitted_file_name',
-                      'lab', 'uuid', 'replicate'
+                      'uuid', 'replicate'
                       ]),
         'replicate': set(['biological_replicate_number', 'technical_replicate_number', 
                           'paired_ended'])
