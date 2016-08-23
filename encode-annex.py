@@ -32,7 +32,7 @@ def main(cmdline=None):
     for object_id in args.experiments:
         obj = get_experiment(object_id, args.host, auth)
         with chdirContext(args.destination):
-            files_tracked += annex_encode_files(obj, args.host, auth)
+            files_tracked += annex_encode_files(obj, args.host, auth, args.fast)
 
     if files_tracked > 0:
         git_commit(args.destination, args.experiments)
@@ -107,9 +107,7 @@ def get_experiment(experiment, host, auth=None):
         raise ValueError("Returned object not an experiment")
 
     return obj
-
-
-def annex_encode_files(experiment, host, auth):
+def annex_encode_files(experiment, host, auth, fast=False):
     """annex files from the experiment attaching some useful metadata.
     """
     files_tracked = 0
@@ -132,7 +130,7 @@ def annex_encode_files(experiment, host, auth):
         _, name = os.path.split(file_object['href'])
         #name = file_object['accession'] + '.' + file_object['file_format']
         if not (os.path.islink(name) or os.path.exists(name)):
-            annex_addurl(name, url)
+            annex_addurl(name, url, fast)
             files_tracked += 1
 
         metadata = experiment_metadata.copy()
