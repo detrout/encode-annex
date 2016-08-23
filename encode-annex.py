@@ -264,7 +264,7 @@ def annex_metadata(name, metadata):
 
 
 def run_command(cmd):
-    logger.debug(cmd)
+    logger.info(cmd)
     subprocess.check_call(cmd)
 
 class chdirContext(object):
