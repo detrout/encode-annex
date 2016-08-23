@@ -140,7 +140,8 @@ def annex_encode_files(experiment, host, auth, fast=False):
     }
     experiment_metadata = generate_metadata(experiment, useful)
     for file_object in experiment['files']:
-        url = 'https://' + host + file_object['href']
+        login = auth[0] + ':' + auth[1] + '@' if auth is not None else ''
+        url = 'https://' + login + host + file_object['href']
         _, name = os.path.split(file_object['href'])
         #name = file_object['accession'] + '.' + file_object['file_format']
         if not (os.path.islink(name) or os.path.exists(name)):
