@@ -146,6 +146,22 @@ produces a directory tree like this::
     3/ENCFF000EBR.fastq
     3/ENCFF000EBJ.fastq
 
+Search
+======
+
+encode-annex now supports a --search argument that can take part of encode portal
+search query and will populate a repository with all the files from that query.
+
+After using the portal to generate a filtered set of experiments I
+generated a url like the following::
+
+    https://www.encodeproject.org/search/?type=Experiment&assay_title=RNA-seq&assembly=mm10&replicates.library.biosample.life_stage=adult
+
+Those experiments can be downloaded by taking everything after the '/search/?'
+and providing that to::
+
+    encode-annex.py --search 'type=Experiment&assay_title=RNA-seq&assembly=mm10&replicates.library.biosample.life_stage=adult'
+
 Authenticated Requests
 ======================
 
@@ -154,13 +170,9 @@ released yet, and that unfortunately requires an authentication token to be
 sent along with all your requests.
 
 A recent update to encode-annex will allow encode-annex to use the .netrc
-file for its own requests. However you will also need to adjust a git-annex
-setting so the download utililty git-annex calls knows to also use the
-the .netrc file.::
-
-  git config annex.web-download-command = web-download-command = curl -L -n -o %file %url
-
-That forces git-annex to use curl, to follow redirects and to use the .netrc file.
+file for its own requests. The username and password will be provided to git
+annex which is convienent for downloading private consortium data, but does
+mean the repositories should be kept confidential.
   
 
 .. _git-annex: http://git-annex.branchable.com/
