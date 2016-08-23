@@ -279,6 +279,6 @@ class chdirContext(object):
 
     def __exit__(self, exc_type, exc_value, traceback):
         os.chdir(self.cur_dir)
-    
+
 if __name__ == "__main__":
     sys.exit(main())
