@@ -28,8 +28,13 @@ def main(cmdline=None):
 
     auth = get_netrc(args.host)
 
+    experiments = args.experiments.copy()
+
+    if args.search:
+        experiments.extend(encoded_search(args.search, args.host, auth))
+
     files_tracked = 0
-    for object_id in args.experiments:
+    for object_id in experiments:
         obj = get_experiment(object_id, args.host, auth)
         with chdirContext(args.destination):
             files_tracked += annex_encode_files(obj, args.host, auth, args.fast)
@@ -45,6 +50,7 @@ def make_parser():
         '%prog: initialize a git-annex repository with an ENCODE Project experiment')
     parser.add_argument('experiments', nargs='*',
                         help='experiment IDs to download')
+    parser.add_argument('--search', help='use provided query to find experiment ids')
     parser.add_argument('-i', '--init', default=False, action='store_true',
                         help='initialize directory if needed')
     parser.add_argument('-d', '--destination', default=os.getcwd(),
@@ -90,6 +96,15 @@ def verify_annex(target, create=False):
             return False
 
     return True
+
+
+def encoded_search(query, host, auth=None):
+    base = 'https://{host}/search/?{query}'
+    url = base.format(host=host, query=query)
+
+    search = encoded_get(url, auth=None)
+    for row in search['@graph']:
+        yield row['accession']
 
 
 def get_experiment(experiment, host, auth=None):
