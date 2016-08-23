@@ -97,32 +97,46 @@ def get_experiment(experiment, host, auth=None):
     """
     base = 'https://{host}/experiments/{experiment}'
     url = base.format(host=host, experiment=experiment)
+    obj = encoded_get(url, auth)
+    if u'Experiment' not in obj.get('@type', []):
+        raise ValueError("Returned object not an experiment")
+
+    return obj
+
+
+def encoded_get(url, auth=None):
     response = requests.get(url, auth=auth, params={'format': 'json'})
     if response.status_code != 200:
         raise requests.HTTPError(
             "Unable to open {} result {}".format(url, response.status_code))
 
-    obj = response.json()
-    if u'experiment' not in obj.get('@type', []):
-        raise ValueError("Returned object not an experiment")
+    return response.json()
 
-    return obj
 def annex_encode_files(experiment, host, auth, fast=False):
     """annex files from the experiment attaching some useful metadata.
     """
     files_tracked = 0
     useful = {
-        'experiment': set(['assay_term_name', 'assay_term_id',
+        'Experiment': set(['assay_term_name', 'assay_term_id',
                           'biosample_term_name', 'biosample_term_id', 'biosample_type',
                           'dbxrefs', 'target',
                           ]),
-        'file': set(['aliases', 'accession' ,'dataset', 'date_created',
-                      'file_format', 'output_type', 'submitted_file_name',
-                      'uuid', 'replicate'
+        'File': set(['aliases', 'accession', 'assembly',
+                     'dataset', 'date_created',
+                     'file_format', 'genome_annotation',
+                     'output_category', 'output_type',
+                     'status', 'submitted_file_name',
+                     'uuid', 'replicate'
                       ]),
-        'replicate': set(['biological_replicate_number', 'technical_replicate_number', 
+        'Replicate': set(['biological_replicate_number', 'technical_replicate_number',
                           'paired_ended', 'library']),
-        'library': set(['aliases', 'description'])
+        'Library': set(['aliases', 'biosample', 'description',
+                        'nucleic_acid_starting_quantity',
+                        'nucleic_acid_starting_units',
+        ]),
+        'Biosample': set(['life_stage',
+                          'model_organism_age',
+                          'model_organism_age_units'])
     }
     experiment_metadata = generate_metadata(experiment, useful)
     for file_object in experiment['files']:
@@ -163,6 +177,12 @@ def generate_metadata(encode_object, useful):
                 metadata.extend(generate_metadata(encode_object['replicate'], useful))
             elif key == 'library':
                 metadata.extend(generate_metadata(encode_object['library'], useful))
+            elif key == 'biosample':
+                biosample_id = encode_object['biosample']['accession']
+                metadata.extend(['-s', 'biosample={}'.format(biosample_id)])
+                metadata.extend(generate_metadata(encode_object['biosample'], useful))
+            elif key == 'lab':
+                metadata.extend(generate_metadata(encode_object['lab'], useful))
             elif isinstance(value, list):
                 for subvalue in value:
                     metadata.extend(['-s', '{}+={}'.format(key, subvalue)])
